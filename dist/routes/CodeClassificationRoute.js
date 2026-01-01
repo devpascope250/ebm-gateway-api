@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const CodeClassificationController_1 = require("../controllers/CodeClassificationController");
+const authMiddleware_1 = require("../authMiddleware");
+const router = (0, express_1.Router)();
+const CodeCls = new CodeClassificationController_1.CodeClassificationController();
+router.get('/selectCodes', (0, authMiddleware_1.authMiddleware)(), CodeCls.getAllCodeClassification);
+router.get('/selectCodes/cdCls/:cdCls', (0, authMiddleware_1.authMiddleware)(), CodeCls.getCodeClassificationByCdCls);
+router.get('/all-classificationCodes', CodeCls.getAllClassification);
+router.get('/all-codes/:cdCls', CodeCls.getCodeListByCdCls);
+router.get('/all-codes/by-cdCls/:cdClNm', CodeCls.getCodeClassificationByCdClNm);
+exports.default = router;

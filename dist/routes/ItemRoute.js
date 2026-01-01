@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const router = (0, express_1.Router)();
+const SaveItemsController_1 = require("../controllers/SaveItemsController");
+const ItemListController_1 = require("../controllers/ItemListController");
+router.get("/selectItems", new ItemListController_1.ItemsListController().getAllItemsList);
+router.post("/saveItems", new SaveItemsController_1.SaveItemsController().saveItems);
+router.get("/get-latest-item-code", new ItemListController_1.ItemsListController().getLatestItemCode);
+router.post("/get-items-by-itemCd", new ItemListController_1.ItemsListController().getItemsByItemCd);
+exports.default = router;

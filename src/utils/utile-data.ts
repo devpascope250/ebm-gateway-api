@@ -1,0 +1,1 @@
+export type ReceiptType = "NS" | "NR" | "TS" | "TR" | "PS";

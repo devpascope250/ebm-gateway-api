@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const SalesTransactionController_1 = require("../controllers/SalesTransactionController");
+const router = (0, express_1.Router)();
+router.post('/saveSales', new SalesTransactionController_1.SalesTransactionController().saveSales);
+router.post('/generate-transaction-invoice', new SalesTransactionController_1.SalesTransactionController().generateTransactionsInvoice);
+router.get('/generate-sales-report', new SalesTransactionController_1.SalesTransactionController().findAllSalesReport);
+router.get('/get-latest-invoice-id', new SalesTransactionController_1.SalesTransactionController().findLatestInvoiceId);
+router.get('/get-latest-sales-transaction-id', new SalesTransactionController_1.SalesTransactionController().findLatestSalesTransactionId);
+exports.default = router;
