@@ -51,7 +51,7 @@ export class CodeClassificationService extends BaseEbmSyncService {
             const result = data as ResultData;
             if (result.resultCd === "000") {
                 const resultdata = (data as ResCodeData).data.clsList;
-                code.lastRequestDate = DateUtils.parse(result.resultDt);
+                code.lastRequestDate = new Date();
                 await this.codeClassification.create(code,"code_classification", resultdata);
                 return await this.codeClassification.findAll();
             } else {
@@ -70,7 +70,7 @@ export class CodeClassificationService extends BaseEbmSyncService {
             const result = data as ResultData;
             if (result.resultCd === "000") {
                 const resultdata = (data as ResCodeData).data.clsList;
-                code.lastRequestDate = DateUtils.parse(result.resultDt);
+                code.lastRequestDate = new Date();
                 await this.codeClassification.create(code,"code_classification", resultdata);
                 return await this.codeClassification.findByCdCls(cdCls);
             }
@@ -89,7 +89,7 @@ export class CodeClassificationService extends BaseEbmSyncService {
             const result = data as ResultData;
             if (result.resultCd === "000") {
                 const resultdata = (data as ResCodeData).data.clsList;
-                code.lastRequestDate = DateUtils.parse(result.resultDt);
+                code.lastRequestDate = new Date();
                 await this.codeClassification.create(code,"code_classification", resultdata);
                 return await this.codeClassification.getAllClassificationCode();
             }
@@ -107,7 +107,7 @@ export class CodeClassificationService extends BaseEbmSyncService {
             const result = data as ResultData;
             if (result.resultCd === "000") {
                 const resultdata = (data as ResCodeData).data.clsList;
-                code.lastRequestDate = DateUtils.parse(result.resultDt);
+                code.lastRequestDate = new Date();
                 await this.codeClassification.create(code,"code_classification", resultdata);
                 return await this.codeClassification.getAllCodeList(cdCls);
             }
@@ -125,7 +125,7 @@ export class CodeClassificationService extends BaseEbmSyncService {
             const result = data as ResultData;
             if (result.resultCd === "000") {
                 const resultdata = (data as ResCodeData).data.clsList;
-                code.lastRequestDate = DateUtils.parse(result.resultDt);
+                code.lastRequestDate = new Date();
                 await this.codeClassification.create(code,"code_classification", resultdata);
                 return await this.codeClassification.findByCdClsNm(cdClsNm, query);
             }

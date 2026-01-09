@@ -16,8 +16,6 @@ export class PurchaseSalesTransactionService extends BaseEbmSyncService {
         super();
         this.purchaseSalesTransactionRepository = new PurchaseSalesTransactionRepository();
     }
-
-
     async saveSyncPurchaseSalesTransaction(payload: EbmSyncStatus, refresh?: boolean, start_date?: string, end_date?: string) {
         const [namespace, key] = CacheNamespace.purchases.listPurchases(payload.tin, payload.bhfId);
         try {
@@ -31,31 +29,33 @@ export class PurchaseSalesTransactionService extends BaseEbmSyncService {
                 throw data;
             }
             if ((data as ResultData).resultCd === "000") {
-                await redisCache.delete(namespace, key);
-                payload.lastRequestDate = DateUtils.parse((data as ResultData).resultDt);
+                // await redisCache.delete(namespace, key);
+                payload.lastRequestDate = new Date();
                 const purchase = data.data.saleList;
                 await this.purchaseSalesTransactionRepository.createAll(purchase, payload);
                 if (!refresh) {
                     const retData = {
                         data: await this.purchaseSalesTransactionRepository.findByTinAndBhfId(payload.tin, payload.bhfId, start_date, end_date),
-                        resultDt: DateUtils.parse((data as ResultData).resultDt)
+                        resultDt: DateUtils.parse((data as ResultData).resultDt),
+                        message: "New Purchase Items Added Well!"
                     }
-                    await redisCache.save(namespace, key, retData);
+                    // await redisCache.save(namespace, key, retData);
                     return retData
                 } else {
                     return purchase;
                 }
             }
             if (!refresh) {
-                const cache = await redisCache.get(namespace, key);
-                if(cache){
-                    return cache;
-                }
+                // const cache = await redisCache.get(namespace, key);
+                // if(cache){
+                //     return cache;
+                // }
                 const saveDAta = {
                     data: await this.purchaseSalesTransactionRepository.findByTinAndBhfId(payload.tin, payload.bhfId, start_date, end_date),
-                    resultDt: status?.lastRequestDate
+                    resultDt: status?.lastRequestDate,
+                    message: "Not New Purchase Items!"   
                 }
-                await redisCache.save(namespace, key, saveDAta);
+                // await redisCache.save(namespace, key, saveDAta);
                 return saveDAta
             } else {
                 return true;

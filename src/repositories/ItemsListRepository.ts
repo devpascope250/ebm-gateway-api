@@ -30,7 +30,7 @@ export class ItemsListRepository extends BaseRepository {
         }
     }
 
-    protected async checkExistedItem(itemCd: string, payload: EbmSyncStatus, tx: TransactionInterface): Promise<boolean> {
+     async checkExistedItem(itemCd: string, payload: EbmSyncStatus, tx?: TransactionInterface): Promise<boolean> {
         const sql = `SELECT * FROM ${this.tableName} WHERE itemCd = :itemCd AND tin = :tin AND regBhfId = :bhfId`;
         if(tx){
             const result = await tx.queryNamed<ItemsList[]>(sql, {itemCd, ...payload});

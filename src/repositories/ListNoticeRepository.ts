@@ -34,7 +34,7 @@ export class ListNoticeRepository extends BaseRepository {
     // get all 
 
     async getAll(payload: EbmSyncStatus): Promise<ListNotice[]> {
-        const sql = `SELECT * FROM ${this.tableName} WHERE tin = :tin AND bhfId = :bhfId`;
+        const sql = `SELECT * FROM ${this.tableName} WHERE tin = :tin AND bhfId = :bhfId ORDER BY createdAt DESC`;
         const result = await this.queryNamed<ListNotice[]>(sql, {...payload});       
         return result;
 

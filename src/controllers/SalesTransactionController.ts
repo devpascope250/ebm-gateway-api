@@ -17,17 +17,18 @@ export class SalesTransactionController {
 
     generateTransactionsInvoice = async (req: Request, res: Response) => {
         try {
-            const { currentInv, allInvo, type, rfdRsnCd, freshInv } = req.body;
+            const { currentInv, allInvo, type, rfdRsnCd, freshInv, custData } = req.body;
             if ((type === "NR" || type === "TR") && !rfdRsnCd) {
                 throw {
                     status: 400,
                     message: "rfdRsnCd(Refund Reason Code) is required for type NR and TR"
                 }
             }
-            const result = await this.saleTransactionService.generateTransactionInvoice(req.context, currentInv, allInvo, type, rfdRsnCd, freshInv);
+            const increment = req.body.increment;
+            const result = await this.saleTransactionService.generateTransactionInvoice(req.context, currentInv, allInvo, type, rfdRsnCd, freshInv, custData, increment);
             res.status(200).json(result);
         } catch (error) {
-            console.log(error);
+            // console.log(error);
 
             res.status(500).json(error);
         }

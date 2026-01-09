@@ -15,6 +15,7 @@ export class ListNoticeController {
                     id: notice.noticeNo,
                     title: notice.title,
                     content: notice.cont,
+                    sentBy: notice.regrNm,
                     detailUrl: notice.dtlUrl,
                     registeredDate: (DateUtils.parse(notice?.regDt ?? "") ?? notice.regDt).toLocaleDateString()+ " "+(DateUtils.parse(notice?.regDt ?? "") ?? notice.regDt).toLocaleTimeString(),
                     isRead: false,

@@ -30,28 +30,39 @@ export class ListImportItemService extends BaseEbmSyncService {
         if( loadedList.resultCd !== "000" && loadedList.resultCd !== "001" && loadedList.resultCd !== "894") {
             throw loadListImportItem;
         }
+
         if (loadedList.resultCd === "000") {
             await redisCache.delete(namespace, key);
             const data = loadListImportItem.data.itemList as ListImportItem[];
-            payload.lastRequestDate = DateUtils.parse(loadedList.resultDt);
+            payload.lastRequestDate = new Date();
             await this.listImportItemRepository.createManyWithTransaction(data, payload);
             const returnData = {
                 data: await this.listImportItemRepository.getAll(payload, start_date, end_date),
-                resultDt:  DateUtils.parse(loadedList.resultDt) ?? new Date()
+                resultDt:  new Date(),
+                message: "New Items Imported!"
             }
-            await redisCache.save(namespace, key, returnData);
+            // await redisCache.save(namespace, key, returnData);
             return returnData
         }
-        const cache = await redisCache.get(namespace, key);
-        if(cache){
-            return cache as {data: ListImportItem[], resultDt: Date};
-        }
-        const retData = {
+        // const cache = await redisCache.get(namespace, key);
+        // const cached = cache as {data: ListImportItem[], resultDt: Date};
+        // if(cached.data.length > 0){
+        //     return {
+        //         data: cached.data,
+        //         resultDt: cached.resultDt
+        //     }
+            
+        // }else{
+             const retData = {
             data: await this.listImportItemRepository.getAll(payload, start_date, end_date),
-            resultDt: status?.lastRequestDate ?? new Date()
+            resultDt: status?.lastRequestDate ?? new Date(),
+            message: "There is No New Item Found!"
+
         }
-        await redisCache.save(namespace, key, retData);
+        // await redisCache.save(namespace, key, retData);
         return retData
+        // }
+       
     }catch(e) {
         throw e;
     }

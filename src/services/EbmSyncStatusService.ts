@@ -66,7 +66,7 @@ export abstract class BaseEbmSyncService {
         //     return cache as EbmSyncStatus;
         // }
         const result = await this.repo.findByTinAndBhfIdEntityName(tin, bhfId, entityName);
-        await redisCache.save(namespace, key, result, { ttl: 86400 });
+        // await redisCache.save(namespace, key, result, { ttl: 86400 });
         return result;
     }
     protected async getEbmSyncStatusByEntityName(entityName: TableModal): Promise<EbmSyncStatus | null> {
@@ -82,7 +82,7 @@ export abstract class BaseEbmSyncService {
 
     protected EbmRequestPayload(payload: EbmSyncStatus) {
         let dateToFormat = payload.lastRequestDate ? new Date(payload.lastRequestDate) : new Date();
-        dateToFormat.setHours(0, 0, 0, 0);
+        // dateToFormat.setHours(0, 0, 0, 0);
         return {
             tin: payload.tin,
             bhfId: payload.bhfId,

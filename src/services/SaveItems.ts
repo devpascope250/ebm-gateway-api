@@ -9,6 +9,7 @@ import { ItemListService } from "./ItemListService";
 
 export class SaveItemsService extends BaseEbmSyncService {
     private itemsListSercive: ItemListService;
+    private itemsListRepository: ItemsListRepository = new ItemsListRepository();
     private apiServices: ApiServices = new (class extends ApiServices { })();
     constructor() {
         super();
@@ -21,6 +22,14 @@ export class SaveItemsService extends BaseEbmSyncService {
         data.modrNm = "Admin";
         data.regrId = "Admin";
         data.regrNm = "Admin";
+
+        const checkItemExist = await this.itemsListRepository.checkExistedItem(data.itemCd, payload);
+        if(checkItemExist){
+            throw {
+                resultCd: "999",
+                resultMsg: "Item code already exist"
+            }
+        }
         const result = await this.apiServices.fetch(UrlPath.SAVE_ITEMS, "POST", data);
         await this.itemsListSercive.getItemsList(payload, true);
         return result;

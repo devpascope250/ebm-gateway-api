@@ -29,7 +29,7 @@ export class ListNoticeService extends BaseEbmSyncService {
         if ((loadNotice as ResultData).resultCd === "000") {
             await redisCache.delete(namespace, key);
             const data = loadNotice.data.noticeList as ListNotice[];
-            payload.lastRequestDate = DateUtils.parse((loadNotice as ResultData).resultDt);
+            payload.lastRequestDate = new Date();
             await this.listNoticeRepository.insertMany(data, payload);
             const retData = await this.listNoticeRepository.getAll(payload);
             await redisCache.save(namespace, key, retData);

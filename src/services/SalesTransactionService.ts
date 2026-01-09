@@ -4,6 +4,7 @@ import { SalesTransaction } from "../models/SalesTransaction";
 import { SaveStockMaster } from "../models/SaveStockMaster";
 import { StockInOutSave } from "../models/StockInOutSave";
 import { SalesTransactionRepository } from "../repositories/SalesTransactionRepository";
+import { ResultData } from "../types/data";
 import { DateUtils } from "../utils/date-time";
 import { UrlPath } from "../utils/UrlPath";
 import { ReceiptType } from "../utils/utile-data";
@@ -19,7 +20,9 @@ export class SalesTransactionService extends BaseEbmSyncService {
         super();
         this.salesTransactionRepository = new SalesTransactionRepository();
     }
-    async saveSalesTransaction(data: any, allInvo: InvoiceIds[], payload: EbmSyncStatus) {        
+    async saveSalesTransaction(data: any, allInvo: InvoiceIds[], payload: EbmSyncStatus) {   
+
+        
         // check if exist before save
         const salesTyCd = data.salesTyCd as string;
         const rcptTyCd = data.rcptTyCd as string;
@@ -88,11 +91,19 @@ export class SalesTransactionService extends BaseEbmSyncService {
                 modrId: data.modrId,
                 modrNm: data.modrNm,
                 receipt: {
-                    ...data.receipt
+                    prchrAcptcYn: data.prchrAcptcYn,
+                    rptNo: data.receipt?.rptNo,
+                    adrs: data.receipt?.adrs,
+                    btmMsg: data.receipt?.btmMsg,
+                    custMblNo: data.receipt?.custMblNo,
+                    trdeNm: data.receipt?.trdeNm,
+                    topMsg: data.receipt?.topMsg,
+                    custTin: (data.receipt?.custTn === "" ? null : data.receipt?.custTn) ?? (data.custTin === "" ? null : data.custTin)
                 },
                 itemList: data.itemList
 
             }
+
             const status = await this.apiservice.fetch(UrlPath.SAVE_SALES, "POST", newdata);
             if (status.resultCd === "000") {
                 status.data.mrcNo = payload.mrc_code ?? status.data.mrcNo;
@@ -105,12 +116,11 @@ export class SalesTransactionService extends BaseEbmSyncService {
             }
         }
     }
-    async generateTransactionInvoice(payload: EbmSyncStatus, currentInv: InvoiceIds[], allInvo: InvoiceIds[], type: ReceiptType, rfdRsnCd?: string, freshInv?: InvoiceIds[]) {
-        //   console.log(payload, type, currentInv, allInvo);
+    async generateTransactionInvoice(payload: EbmSyncStatus, currentInv: InvoiceIds[], allInvo: InvoiceIds[], type: ReceiptType, rfdRsnCd?: string, freshInv?: InvoiceIds[], custData?: Array<{id: string, tin: string, purchaseCode: number}>, increment?: number) {
+        
         try {
-            const invoice = await this.salesTransactionRepository.getSalesTransactionByTinAndBhfIdAndTypeAndInvcNo(payload.tin, payload.bhfId, type, currentInv, allInvo, freshInv);
+            const invoice = await this.salesTransactionRepository.getSalesTransactionByTinAndBhfIdAndTypeAndInvcNo(payload.tin, payload.bhfId, type, currentInv, freshInv, custData);
             // console.log(invoice);
-
             const savesInvcNo = [];
             if (invoice.status === 404) {
                 await this.salesTransactionRepository.checkExistedInvoiceBeforeInsert(payload.tin, payload.bhfId, allInvo, type);
@@ -120,19 +130,33 @@ export class SalesTransactionService extends BaseEbmSyncService {
                     delete invvCopy.response;
                     invvCopy.salesTyCd = type.charAt(0);
                     invvCopy.rcptTyCd = type.charAt(1);
+                    
                     if (rfdRsnCd) {
                         invvCopy.rfdRsnCd = rfdRsnCd;
                     }
                     if (type === "NR" || type === "TR") {
                         invvCopy.orgInvcNo = invvCopy.invcNo;
                     }
-
+                    const findLatestInvoiceId = await this.findLatestInvoiceId(payload);
                     if (allInvo.length > 0) {
-                        invvCopy.invcNo = Number(allInvo[0].invcNo) + index + 1;
+                        invvCopy.invcNo = Number(findLatestInvoiceId) + index + 1 + (increment ? increment : 0);
                         savesInvcNo.push({ invcNo: invvCopy.invcNo });
                     }
+                    
+                    const status = await this.apiservice.fetch(UrlPath.SAVE_SALES, "POST", { ...invvCopy});
+                    if(status.resultCd === "883"){
+                        const err: ResultData = {
+                            data: [],
+                            resultCd: "883",
+                            resultDt: status.resultDt,
+                            resultMsg: "Purchase Code already used \n Please Generate new For Refund."
+                        }
+                        throw err;
+                        
+                    }else if(status.resultCd !== "000"){
+                        throw status;
+                    }
 
-                    const status = await this.apiservice.fetch(UrlPath.SAVE_SALES, "POST", { ...invvCopy });
                     status.data.mrcNo = payload.mrc_code ?? status.data.mrcNo;
                     const stockIOdata: StockInOutSave = {
                         tin: payload.tin,
@@ -155,6 +179,8 @@ export class SalesTransactionService extends BaseEbmSyncService {
                         modrId: invvCopy.modrId!,
                         itemList: invvCopy.itemList!.map(item => ({
                             itemSeq: item.itemSeq,
+                            itemCd: item.itemCd,
+                            bcd: item.bcd,
                             itemClsCd: item.itemClsCd,
                             itemNm: item.itemNm,
                             pkgUnitCd: item.pkgUnitCd,
@@ -184,11 +210,8 @@ export class SalesTransactionService extends BaseEbmSyncService {
                         };
                     }
                     
-                    
-                     await this.stockIOService.saveStockInOut(stockIOdata, payload);
-                    
                     if (status.resultCd === "000") {
-                        await this.salesTransactionRepository.createWithTransaction({ ...(invvCopy as SalesTransaction), response: status.data });
+                        await this.salesTransactionRepository.createWithTransaction({ ...(invvCopy as unknown as SalesTransaction), response: status.data });
                         await this.stockIOService.saveStockInOut(stockIOdata, payload);
                         if(type === "NR"){
                             await Promise.all(invvCopy.itemList!.map(async (item) => {
@@ -204,7 +227,7 @@ export class SalesTransactionService extends BaseEbmSyncService {
                         // console.log(existed, Number(allInvo[0].invcNo) + index + 1);
 
                         if (!existed) {
-                            await this.salesTransactionRepository.createWithTransaction({ ...(invvCopy as SalesTransaction), response: status.data });
+                            await this.salesTransactionRepository.createWithTransaction({ ...(invvCopy as unknown as SalesTransaction), response: status.data });
                         }
                     } else {
                         throw status;
@@ -220,7 +243,6 @@ export class SalesTransactionService extends BaseEbmSyncService {
             } else {
                 return invoice;
             }
-
         } catch (e) {
             console.log(e);
             throw e;

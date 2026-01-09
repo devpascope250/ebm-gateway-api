@@ -30,7 +30,7 @@ export class ItemListService extends BaseEbmSyncService {
         const loadedList = (loadList as ResultData);
         if (loadedList.resultCd === "000") {
             const data = loadList.data.itemList;
-            payload.lastRequestDate = DateUtils.parse(loadedList.resultDt);
+            payload.lastRequestDate = new Date();
             await this.itemListRepository.createManyItems(data, payload);
             await redisCache.delete(namespace, key);
             await redisCache.save(namespace, key, data, {ttl: 86400});

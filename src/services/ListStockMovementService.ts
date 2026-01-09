@@ -24,7 +24,7 @@ export class ListStockMovementService extends BaseEbmSyncService {
             throw data;
         }
         if ((data as ResultData).resultCd === "000") {
-            payload.lastRequestDate = new Date((data as ResultData).resultDt);
+            payload.lastRequestDate = new Date();
             const movements = data.data.stockItemList as ListStockMovement[];
             await this.listStockMovementRepository.createManyStockMovements(movements, payload);
             return await this.listStockMovementRepository.findAll(payload);

@@ -1,4 +1,3 @@
-import { log } from "console";
 import { InvoiceIds } from "../models/ItemsList";
 import { SalesTransaction } from "../models/SalesTransaction";
 import groupByMap from "../utils/DataParse";
@@ -72,6 +71,8 @@ export class SalesTransactionRepository extends BaseRepository {
 
     // sale whole transaction
     async createWithTransaction(saleTransaction: SalesTransaction): Promise<SalesTransaction> {
+        // console.log(saleTransaction);
+        
         try {
             let id;
             await this.transaction(async (tx) => {
@@ -125,8 +126,8 @@ export class SalesTransactionRepository extends BaseRepository {
 
     // get sales transaction by tin and bhfId, type and invcNo
 
-    async getSalesTransactionByTinAndBhfIdAndTypeAndInvcNo(tin: string, bhfId: string, type: ReceiptType, invcNo: InvoiceIds[], allInvo?: InvoiceIds[], freshInvo?: InvoiceIds[]) {
-        console.log('Receiver: ', tin, bhfId, invcNo, allInvo);
+    async getSalesTransactionByTinAndBhfIdAndTypeAndInvcNo(tin: string, bhfId: string, type: ReceiptType, invcNo: InvoiceIds[], freshInvo?: InvoiceIds[], custData?: Array<{id: string, tin: string, purchaseCode: number}>) {
+        console.log('Receiver: ', tin, bhfId, invcNo, custData, type);
 
         if (invcNo.length === 0) {
             throw {
@@ -148,7 +149,11 @@ export class SalesTransactionRepository extends BaseRepository {
                         }
                     }
                 } else {
+                    // console.log('echexkkkkk888**************',tin, bhfId, invcNo);
+                    
                     const res = await this.getAllInv(tin, bhfId, invcNo, "NS");
+                    // console.log(res, type);
+                    
                     if (res.length === 0) {
                         throw ({
                             status: 400,
@@ -160,7 +165,7 @@ export class SalesTransactionRepository extends BaseRepository {
 
             }
             if (type === 'TR') {
-                // console.log(tin, bhfId, (allInvo ? allInvo : invcNo));  
+                console.log(tin, bhfId, invcNo, freshInvo);  
                 if (freshInvo && freshInvo.length > 0) {
                     const resTR = await this.getAllInv(tin, bhfId, freshInvo, "TR");
                     if (resTR.length > 0) {
@@ -187,9 +192,15 @@ export class SalesTransactionRepository extends BaseRepository {
                     message: 'Invoice is not existed, Please Create New Invoice'
                 }
             }
+            const newData = data.map((inv) => {
+                return {
+                    ...inv,
+                    prcOrdCd: custData && custData.length > 0 ? custData?.find((c) => c.tin === inv.custTin)?.purchaseCode : inv.prcOrdCd
+                }
+            })
             return {
                 status: 404,
-                data: data
+                data: newData
             };
 
         } else {

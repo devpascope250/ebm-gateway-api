@@ -23,6 +23,12 @@ export abstract class ApiServices {
             body: JSON.stringify(body)
         })
             .then(response => response.json())
-            .catch(error => console.error('Error:', error));
+            .catch((e) => {
+                console.error('Error:', e)
+                // retect newtwork error
+                if (e instanceof Error) {
+                    throw new Error(e.message);
+                }
+            });
     }
 }
