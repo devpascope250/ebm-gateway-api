@@ -49,6 +49,7 @@ export interface SalesTransactionsReceipt {
     id?: number; // auto increment
     sales_transactions_id?: number;
     custTin: string;
+    custTIn?: string;
     custMblNo?: string; // Customer Mobile Number
     rptNo: number; // Report Number
     trdeNm?: string; // Trade Name

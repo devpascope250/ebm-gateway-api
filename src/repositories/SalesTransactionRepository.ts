@@ -127,7 +127,7 @@ export class SalesTransactionRepository extends BaseRepository {
     // get sales transaction by tin and bhfId, type and invcNo
 
     async getSalesTransactionByTinAndBhfIdAndTypeAndInvcNo(tin: string, bhfId: string, type: ReceiptType, invcNo: InvoiceIds[], freshInvo?: InvoiceIds[], custData?: Array<{id: string, tin: string, purchaseCode: number}>) {
-        console.log('Receiver: ', tin, bhfId, invcNo, custData, type);
+        // console.log('Receiver: ', tin, bhfId, invcNo, custData, type);
 
         if (invcNo.length === 0) {
             throw {
@@ -165,7 +165,7 @@ export class SalesTransactionRepository extends BaseRepository {
 
             }
             if (type === 'TR') {
-                console.log(tin, bhfId, invcNo, freshInvo);  
+                // console.log(tin, bhfId, invcNo, freshInvo);  
                 if (freshInvo && freshInvo.length > 0) {
                     const resTR = await this.getAllInv(tin, bhfId, freshInvo, "TR");
                     if (resTR.length > 0) {
@@ -356,7 +356,7 @@ export class SalesTransactionRepository extends BaseRepository {
     }
 
 
-    public async getAllSalesReport(tin: string, bhfId: string, startDate?: string, endDate?: string) {
+    public async getAllSalesReport(tin: string, bhfId: string,reportType: "X" | "Z", startDate?: string, endDate?: string) {
         // get to day date
         let start: Date;
         let end: Date;
@@ -364,6 +364,13 @@ export class SalesTransactionRepository extends BaseRepository {
             start = new Date(startDate);
             end = new Date(endDate);
         } else {
+            if(reportType === "Z"){
+                return {
+                    data: [],
+                    message: "There is Report of to day, Will be Generate in 24 hours after as final report",
+                    status: 404
+                }
+            }
             start = new Date();
             end = new Date();
         }
@@ -494,7 +501,11 @@ export class SalesTransactionRepository extends BaseRepository {
                 }))
             }
         });
-        return nestedData;
+        return {
+            data: nestedData,
+            message: "Success",
+            status: 200
+        };
     }
 
     protected async checkExistedInvoice(tin: string, bhfId: string, type: string, invcNo: InvoiceIds[]) {

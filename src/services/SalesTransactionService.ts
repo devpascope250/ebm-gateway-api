@@ -120,11 +120,25 @@ export class SalesTransactionService extends BaseEbmSyncService {
         
         try {
             const invoice = await this.salesTransactionRepository.getSalesTransactionByTinAndBhfIdAndTypeAndInvcNo(payload.tin, payload.bhfId, type, currentInv, freshInv, custData);
-            // console.log(invoice);
+            const newInvoiceData = invoice.data.map((data) => {
+                return {
+                    ...data,
+                    receipt: {
+                    prchrAcptcYn: data.prchrAcptcYn,
+                    rptNo: data.receipt?.rptNo,
+                    adrs: data.receipt?.adrs,
+                    btmMsg: data.receipt?.btmMsg,
+                    custMblNo: data.receipt?.custMblNo,
+                    trdeNm: data.receipt?.trdeNm,
+                    topMsg: data.receipt?.topMsg,
+                    custTin: (data.custTin === "" ? null : data.custTin)
+                    }
+                }
+            })
             const savesInvcNo = [];
             if (invoice.status === 404) {
                 await this.salesTransactionRepository.checkExistedInvoiceBeforeInsert(payload.tin, payload.bhfId, allInvo, type);
-                for (const [index, invv] of invoice.data.entries()) {
+                for (const [index, invv] of newInvoiceData.entries()) {
                     // remove reponse from invv
                     const invvCopy = { ...invv } as Partial<typeof invv>;
                     delete invvCopy.response;
@@ -136,6 +150,7 @@ export class SalesTransactionService extends BaseEbmSyncService {
                     }
                     if (type === "NR" || type === "TR") {
                         invvCopy.orgInvcNo = invvCopy.invcNo;
+                        invvCopy.salesSttsCd = "05";
                     }
                     const findLatestInvoiceId = await this.findLatestInvoiceId(payload);
                     if (allInvo.length > 0) {
@@ -211,6 +226,7 @@ export class SalesTransactionService extends BaseEbmSyncService {
                     }
                     
                     if (status.resultCd === "000") {
+                        // invvCopy.receipt?.custTin = (invvCopy.custTin === "" ? null : invvCopy.custTin);
                         await this.salesTransactionRepository.createWithTransaction({ ...(invvCopy as unknown as SalesTransaction), response: status.data });
                         await this.stockIOService.saveStockInOut(stockIOdata, payload);
                         if(type === "NR"){
@@ -252,8 +268,8 @@ export class SalesTransactionService extends BaseEbmSyncService {
 
     // get all sales reports
 
-    async findAllSalesReport(payload: EbmSyncStatus, startDate?: string, endDate?: string) {
-        return await this.salesTransactionRepository.getAllSalesReport(payload.tin, payload.bhfId, startDate, endDate);
+    async findAllSalesReport(payload: EbmSyncStatus, reportType: "X" | "Z", startDate?: string, endDate?: string) {
+        return await this.salesTransactionRepository.getAllSalesReport(payload.tin, payload.bhfId,reportType, startDate, endDate);
     }
 
     async findLatestInvoiceId(payload: EbmSyncStatus) {

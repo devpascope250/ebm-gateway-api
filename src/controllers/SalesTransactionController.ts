@@ -38,8 +38,8 @@ export class SalesTransactionController {
         try {
             const startDate = req.query.startDate as string;
             const endDate = req.query.endDate as string;
-
-            const response = await this.saleTransactionService.findAllSalesReport(req.context, startDate, endDate);
+            const reportType = req.query.reportType as any;
+            const response = await this.saleTransactionService.findAllSalesReport(req.context,reportType, startDate, endDate,);
             res.status(200).json(response);
         } catch (error) {
             console.log(error);

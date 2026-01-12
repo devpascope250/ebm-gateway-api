@@ -19,10 +19,10 @@ export class ListNoticeService extends BaseEbmSyncService {
 
     public async getAllNotice(payload: EbmSyncStatus): Promise<ListNotice[]> {
         const [namespace, key] = CacheNamespace.noticesList.listNotices(payload.tin, payload.bhfId);
-        const status = await this.getEbmSyncStatusTinBhfIdEntityName(payload.tin, payload.bhfId, "list_notice");
-        if (status) {
-            payload.lastRequestDate = status.lastRequestDate;
-        }
+        // const status = await this.getEbmSyncStatusTinBhfIdEntityName(payload.tin, payload.bhfId, "list_notice");
+        // if (status) {
+        //     payload.lastRequestDate = status.lastRequestDate;
+        // }
         const loadNotice = await this.apiService.fetch(UrlPath.LIST_NOTICE, "POST",
             this.EbmRequestPayload(payload)
         );
